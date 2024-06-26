@@ -10,8 +10,7 @@ if os.path.exists('.env'):
     load_dotenv()
 
 # Configure environment variables for database connections and GCS
-POSTGRES_HOST = os.getenv("POSTGRES_HOST")
-POSTGRES_PORT = os.getenv("POSTGRES_PORT")
+POSTGRES_CONNECTION_NAME = os.getenv("POSTGRES_CONNECTION_NAME")
 POSTGRES_USER = os.getenv("POSTGRES_USER")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 POSTGRES_DB = os.getenv("POSTGRES_DB")
@@ -29,7 +28,7 @@ async def export_data():
         duckdb_conn.execute("LOAD postgres;")
         
         # Define PostgreSQL connection string
-        postgres_conn_str = f"dbname={POSTGRES_DB} user={POSTGRES_USER} host={POSTGRES_HOST} password={POSTGRES_PASSWORD} port={POSTGRES_PORT}"
+        postgres_conn_str = f"dbname={POSTGRES_DB} user={POSTGRES_USER} password={POSTGRES_PASSWORD} host=/cloudsql/{POSTGRES_CONNECTION_NAME}"
         
         # Attach PostgreSQL database
         duckdb_conn.execute(f"ATTACH '{postgres_conn_str}' AS postgres_db (TYPE POSTGRES, READ_ONLY);")

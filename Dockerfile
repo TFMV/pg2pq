@@ -11,6 +11,9 @@ WORKDIR /app
 COPY app.py /app
 COPY requirements.txt /app
 
+# mount the volume for the application
+VOLUME /mnt/gcs
+
 # Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
