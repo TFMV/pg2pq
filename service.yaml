@@ -1,0 +1,70 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+    run.googleapis.com/launch-stage: BETA
+  labels:
+    cloud.googleapis.com/location: us-central1
+  name: duckdb-export
+  namespace: '858338514445'
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '4'
+        run.googleapis.com/client-name: cloud-console
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/startup-cpu-boost: 'true'
+      labels:
+        client.knative.dev/nonce: 53657772-e4b1-43fb-88d5-106847e4dd41
+        run.googleapis.com/startupProbeType: Default
+    spec:
+      containerConcurrency: 4
+      containers:
+      - env:
+        - name: POSTGRES_HOST
+          value: 35.222.64.178
+        - name: POSTGRES_PORT
+          value: '5432'
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_DB
+          value: postgres
+        - name: GCS_MOUNT_PATH
+          value: /mnt/gcs
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: latest
+              name: postgres-pwd
+        image: gcr.io/tfmv-371720/duckdb-export@sha256:c84cb4031adb8912b8875b1f82f39042000281cb1d6cc48b2b1e39aef2dcc2dd
+        name: duckdb-export-1
+        ports:
+        - containerPort: 8080
+          name: http1
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+        startupProbe:
+          failureThreshold: 1
+          periodSeconds: 240
+          tcpSocket:
+            port: 8080
+          timeoutSeconds: 240
+        volumeMounts:
+        - mountPath: /mnt/gcs
+          name: mnt-gcs
+      serviceAccountName: sa-api@tfmv-371720.iam.gserviceaccount.com
+      timeoutSeconds: 3600
+      volumes:
+      - csi:
+          driver: gcsfuse.run.googleapis.com
+          volumeAttributes:
+            bucketName: tfmv-public
+        name: mnt-gcs
+  traffic:
+  - latestRevision: true
+    percent: 100
